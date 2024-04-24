@@ -4,6 +4,7 @@ from models import Character, Action, EndTurn, Build, Ability, AssassinMarker, T
     ChangeCards, DistrictType, Resource, NoTarget
 from player import Player
 from utility import retrieve_cards, has_all_types, get_engine_by_name, get_order
+from stats import Stats
 
 
 class Game:
@@ -15,6 +16,7 @@ class Game:
         self.finishing_order = []
         self.engines = [get_engine_by_name("random_chooser") for _ in range(num_players)]
         self.turn = 1
+        self.stats = Stats(num_players)
 
         self.deal_cards()
         self.deal_gold()
@@ -42,6 +44,8 @@ class Game:
             chosen_id = self.engines[p.player_id].choose_character(characters, public_info)
             p.character = Some(characters.pop(chosen_id))
 
+            self.stats.character_matrix[p.player_id][get_order(p.character.value)-1] += 1
+
     def draw(self, player, amount=1):
         for _ in range(amount):
             if len(self.deck) == 0:
@@ -60,10 +64,10 @@ class Game:
             engine = self.engines[player.player_id]
             if action.character == Character.Assassin:
                 target = engine.choose_target(Character.Assassin, self.get_public_info())
-                self.markers.setdefault(target, []).append(AssassinMarker)
+                self.markers.setdefault(target, []).append(AssassinMarker())
             elif action.character == Character.Thief:
                 target = engine.choose_target(Character.Thief, self.get_public_info())
-                self.markers.setdefault(target, []).append(ThiefMarker)
+                self.markers.setdefault(target, []).append(ThiefMarker(player.player_id))
             elif action.character == Character.Magician:
                 mp = engine.magician(public_info, player)
                 if isinstance(mp, SwapHands):
@@ -77,22 +81,25 @@ class Game:
                         player.cards = to_keep
                         self.draw(player, len(to_change))
             elif action.character == Character.King:
-                for card in player.cards:
+                for card in player.districts:
                     if card.district_type == DistrictType.Noble:
                         player.gold += 1
                 self.crowed = player.player_id
             elif action.character == Character.Bishop:
-                for card in player.cards:
+                for card in player.districts:
                     if card.district_type == DistrictType.Religious:
                         player.gold += 1
             elif action.character == Character.Merchant:
-                for card in player.cards:
+                for card in player.districts:
                     if card.district_type == DistrictType.Trade:
                         player.gold += 1
                 player.gold += 1
             elif action.character == Character.Architect:
                 self.draw(player, 2)
             elif action.character == Character.Warlord:
+                for card in player.districts:
+                    if card.district_type == DistrictType.Military:
+                        player.gold += 1
                 w = engine.warlord(self.get_public_info())
                 if isinstance(w, NoTarget):
                     return
@@ -108,7 +115,7 @@ class Game:
         ordered_players = sorted(self.players, key=lambda x: get_order(x.character.value))
         for p in ordered_players:
             p.used_ability = False
-            markers = self.markers.get(p.character, [])
+            markers = self.markers.get(p.character.value, [])
             killed = False
             for m in markers:
                 if isinstance(m, AssassinMarker):
@@ -172,6 +179,7 @@ class Game:
             self.play_turns()
             self.sanity_check()
             self.turn += 1
+            self.markers = {}
 
     def sanity_check(self):
         total_cards = 54
