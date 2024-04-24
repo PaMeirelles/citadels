@@ -5,18 +5,19 @@ from option import Some
 from models import Character, Action, EndTurn, Build, Ability, AssassinMarker, ThiefMarker, SwapHands, \
     ChangeCards, DistrictType
 from player import Player
-from utility import retrieve_cards
+from utility import retrieve_cards, has_all_types
 
 
 class Game:
     def __init__(self, num_players):
         self.players = [Player(i, "random_chooser") for (i, _) in enumerate(range(num_players))]
-        self.deck = retrieve_cards()
+        self.deck = retrieve_cards(True)
         self.deal_cards()
         self.deal_gold()
 
         self.markers = {}
         self.crowed = 1
+        self.finishing_order = []
 
     def deal_cards(self):
         shuffle(self.deck)
@@ -49,6 +50,8 @@ class Game:
         if isinstance(action, Build):
             player.gold -= action.district.cost
             player.cards.pop(action.card_id)
+            if len(player.districts) == 7:
+                self.finishing_order.append(player.player_id)
         elif isinstance(action, Ability):
             if action.character == Character.Assassin:
                 target = player.engine.choose_target(Character.Assassin, self.get_public_info())
@@ -83,7 +86,7 @@ class Game:
             elif action.character == Character.Warlord:
                 wt = player.engine.warlord(self.get_public_info())
                 player_target = self.players[wt.player_id]
-                if player_target.character != Character.Bishop:
+                if player_target.character != Character.Bishop and player_target not in self.finishing_order:
                     player.gold -= (player_target.districts.pop(wt.district_id).cost + 1)
 
     def play_turns(self):
@@ -112,3 +115,22 @@ class Game:
                     break
                 elif isinstance(action, Build):
                     built += 1
+
+    def evaluate(self):
+        scores = [0 for _ in self.players]
+        for i, p in enumerate(self.players):
+            for d in p.districts:
+                scores[i] += d.cost
+            if self.finishing_order[0] == i:
+                scores[i] += 4
+            elif i in self.finishing_order:
+                scores[i] += 2
+
+            if has_all_types(p.districts):
+                scores[i] += 2
+        return scores
+
+    def play(self):
+        while len(self.finishing_order) == 0:
+            self.role_selection()
+            self.play_turns()
