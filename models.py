@@ -38,6 +38,11 @@ class Character(Enum):
     Warlord = 8
 
 
+class Resource(Enum):
+    Gold = 1
+    Cards = 2
+
+
 @dataclass
 class District:
     district_type: DistrictType
@@ -52,9 +57,58 @@ class PublicInfo:
     districts: List[District]
 
 
+@dataclass
+class Action:
+    pass
 
 
+@dataclass
+class Build(Action):
+    district: District
+    card_id: int
 
 
+@dataclass
+class Ability(Action):
+    character: Character
 
 
+@dataclass
+class EndTurn(Action):
+    pass
+
+
+@dataclass
+class Marker:
+    pass
+
+
+@dataclass
+class AssassinMarker(Marker):
+    pass
+
+
+@dataclass
+class ThiefMarker(Marker):
+    player_id: int
+
+
+@dataclass
+class MagicianPower:
+    pass
+
+
+@dataclass
+class SwapHands(MagicianPower):
+    target: int
+
+
+@dataclass
+class ChangeCards(MagicianPower):
+    cards: List[int]
+
+
+@dataclass
+class WarlordTarget:
+    player_id: int
+    district_id: int
