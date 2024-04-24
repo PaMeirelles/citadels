@@ -1,0 +1,18 @@
+name,type,cost,quantity
+temple,religious,1,3
+church,religious,2,3
+monastery,religious,3,3
+cathedral,religious,5,2
+watch tower,military,1,3
+prison,military,2,3
+barracks,military,3,3
+keep,military,5,2
+solar,noble,5,3
+castle,noble,4,4
+palace,noble,3,5
+tavern,trade,5,1
+market,trade,4,2
+trading post,trade,2,3
+docks,trade,3,3
+port,trade,4,3
+town hall,trade,5,3
