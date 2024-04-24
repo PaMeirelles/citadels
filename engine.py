@@ -1,8 +1,7 @@
 from abc import ABC, abstractmethod
-from typing import List
-from models import Character, PublicInfo, Resource, District, Action, MagicianPower, WarlordTarget
+from typing import List, Tuple
+from models import Character, PublicInfo, Resource, District, Action, MagicianPower, WarlordTarget, WarlordOption
 from player import Player
-from random_chooser import RandomChooser
 
 
 class EngineInterface(ABC):
@@ -15,7 +14,7 @@ class EngineInterface(ABC):
         pass
 
     @abstractmethod
-    def choose_card(self, cards: (District, District), public_info: List[PublicInfo]) -> int:
+    def choose_card(self, cards: Tuple[District, District], public_info: List[PublicInfo]) -> int:
         pass
 
     @abstractmethod
@@ -31,12 +30,8 @@ class EngineInterface(ABC):
         pass
 
     @abstractmethod
-    def warlord(self, public_info: List[PublicInfo]) -> WarlordTarget:
+    def warlord(self, public_info: List[PublicInfo]) -> WarlordOption:
         pass
 
 
-def get_engine_by_name(name):
-    if name == "random_chooser":
-        return RandomChooser()
-    else:
-        raise ValueError
+

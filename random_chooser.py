@@ -1,10 +1,8 @@
 from typing import List
-
 from engine import EngineInterface
 from models import Character, PublicInfo, District, Resource, Action, WarlordTarget, MagicianPower, SwapHands, \
-    ChangeCards
+    ChangeCards, NoTarget, WarlordOption
 from random import randint, choice, random
-
 from player import Player
 
 
@@ -14,14 +12,16 @@ class RandomChooser(EngineInterface):
 
     def magician(self, public_info: List[PublicInfo], myself: Player) -> MagicianPower:
         if random() > .5:
-            return SwapHands(randint(0, len(public_info)))
+            return SwapHands(randint(0, len(public_info)-1))
         else:
             card_ids = [x for x in range(len(myself.cards)) if random() > .5]
             return ChangeCards(card_ids)
 
-    def warlord(self, public_info: List[PublicInfo]) -> WarlordTarget:
-        player_id = randint(0, len(public_info))
-        district_id = randint(0, len(public_info[player_id].districts))
+    def warlord(self, public_info: List[PublicInfo]) -> WarlordOption:
+        player_id = randint(0, len(public_info)-1)
+        if len(public_info[player_id].districts) == 0:
+            return NoTarget()
+        district_id = randint(0, len(public_info[player_id].districts)-1)
         return WarlordTarget(player_id, district_id)
 
     def choose_action(self, options: List[Action], public_info: List[PublicInfo]) -> Action:
@@ -31,7 +31,7 @@ class RandomChooser(EngineInterface):
         return choice(list(Resource))
 
     def choose_card(self, cards: (District, District), public_info: List[PublicInfo]) -> int:
-        return randint(0, 2)
+        return randint(0, 1)
 
     def choose_character(self, available_options: List[Character], public_info: List[PublicInfo]) -> int:
-        return randint(0, len(available_options))
+        return randint(0, len(available_options)-1)

@@ -1,19 +1,20 @@
 from random import shuffle
 from option import Some
 from models import Character, Action, EndTurn, Build, Ability, AssassinMarker, ThiefMarker, SwapHands, \
-    ChangeCards, DistrictType
+    ChangeCards, DistrictType, Resource, NoTarget
 from player import Player
-from utility import retrieve_cards, has_all_types, get_engine_by_name
+from utility import retrieve_cards, has_all_types, get_engine_by_name, get_order
 
 
 class Game:
     def __init__(self, num_players):
         self.players = [Player(i) for (i, _) in enumerate(range(num_players))]
-        self.deck = retrieve_cards(True)
+        self.deck = retrieve_cards(avoid_special=True)
         self.markers = {}
         self.crowed = 1
         self.finishing_order = []
         self.engines = [get_engine_by_name("random_chooser") for _ in range(num_players)]
+        self.turn = 1
 
         self.deal_cards()
         self.deal_gold()
@@ -43,29 +44,38 @@ class Game:
 
     def draw(self, player, amount=1):
         for _ in range(amount):
+            if len(self.deck) == 0:
+                break
             player.cards.append(self.deck.pop())
 
     def execute_action(self, action: Action, player: Player):
         if isinstance(action, Build):
             player.gold -= action.district.cost
-            player.cards.pop(action.card_id)
+            player.districts.append(player.cards.pop(action.card_id))
             if len(player.districts) == 7:
                 self.finishing_order.append(player.player_id)
         elif isinstance(action, Ability):
+            player.used_ability = True
+            public_info = self.get_public_info()
+            engine = self.engines[player.player_id]
             if action.character == Character.Assassin:
-                target = self.engines[player.player_id].choose_target(Character.Assassin, self.get_public_info())
+                target = engine.choose_target(Character.Assassin, self.get_public_info())
                 self.markers.setdefault(target, []).append(AssassinMarker)
             elif action.character == Character.Thief:
-                target = self.engines[player.player_id].choose_target(Character.Thief, self.get_public_info())
+                target = engine.choose_target(Character.Thief, self.get_public_info())
                 self.markers.setdefault(target, []).append(ThiefMarker)
             elif action.character == Character.Magician:
-                mp = self.engines[player.player_id].magician()
+                mp = engine.magician(public_info, player)
                 if isinstance(mp, SwapHands):
                     player.cards, self.players[mp.target].cards = self.players[mp.target].cards, player.cards
                 elif isinstance(mp, ChangeCards):
-                    for card_id in mp.cards:
-                        self.deck.append(player.cards.pop(card_id))
-                        self.draw(player)
+                    to_change = [player.cards[i] for i in range(len(player.cards)) if i in mp.cards]
+                    to_keep = [player.cards[i] for i in range(len(player.cards)) if i not in mp.cards]
+
+                    if len(to_change) <= len(self.deck):
+                        self.deck += to_change
+                        player.cards = to_keep
+                        self.draw(player, len(to_change))
             elif action.character == Character.King:
                 for card in player.cards:
                     if card.district_type == DistrictType.Noble:
@@ -83,14 +93,21 @@ class Game:
             elif action.character == Character.Architect:
                 self.draw(player, 2)
             elif action.character == Character.Warlord:
-                wt = self.engines[player.player_id].warlord(self.get_public_info())
-                player_target = self.players[wt.player_id]
+                w = engine.warlord(self.get_public_info())
+                if isinstance(w, NoTarget):
+                    return
+                player_target = self.players[w.player_id]
                 if player_target.character != Character.Bishop and player_target not in self.finishing_order:
-                    player.gold -= (player_target.districts.pop(wt.district_id).cost + 1)
+                    d = player_target.districts[w.district_id]
+                    if player.gold >= d.cost - 1:
+                        player.gold -= (d.cost - 1)
+                        player_target.districts.pop(w.district_id)
+                        self.deck.append(d)
 
     def play_turns(self):
-        self.players.sort(key=lambda x: x.character.value)
-        for p in self.players:
+        ordered_players = sorted(self.players, key=lambda x: get_order(x.character.value))
+        for p in ordered_players:
+            p.used_ability = False
             markers = self.markers.get(p.character, [])
             killed = False
             for m in markers:
@@ -105,10 +122,30 @@ class Game:
                 continue
 
             public_info = self.get_public_info()
+            engine = self.engines[p.player_id]
+            chosen_resource = engine.choose_resource(public_info)
+            if chosen_resource == Resource.Gold:
+                p.gold += 2
+            elif chosen_resource == Resource.Cards:
+                if len(self.deck) == 0:
+                    pass
+                elif len(self.deck) == 1:
+                    p.cards.append(self.deck.pop())
+                    pass
+                else:
+                    card_1 = self.deck.pop()
+                    card_2 = self.deck.pop()
+                    chosen_card = engine.choose_card((card_1, card_2), public_info)
+                    if chosen_card == 0:
+                        p.cards.append(card_1)
+                        self.deck.append(card_2)
+                    elif chosen_card == 1:
+                        p.cards.append(card_2)
+                        self.deck.append(card_1)
             built = 0
             while True:
                 options = p.generate_actions(built)
-                action = self.engines[p.player_id].choose_action(options, public_info)
+                action = engine.choose_action(options, public_info)
                 self.execute_action(action, p)
                 if isinstance(action, EndTurn):
                     break
@@ -133,3 +170,15 @@ class Game:
         while len(self.finishing_order) == 0:
             self.role_selection()
             self.play_turns()
+            self.sanity_check()
+            self.turn += 1
+
+    def sanity_check(self):
+        total_cards = 54
+        cards_in_play = len(self.deck) + sum([len(p.cards) for p in self.players]) + sum([len(p.districts) for p in self.players])
+        if cards_in_play != total_cards:
+            raise Exception
+
+        for p in self.players:
+            if p.gold < 0:
+                raise Exception
