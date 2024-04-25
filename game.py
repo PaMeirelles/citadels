@@ -56,6 +56,8 @@ class Game:
         public_info = self.get_public_info()
 
         if isinstance(action, Build):
+            if action.district.district_type == DistrictType.Special and "Factory" in [x.name for x in player.districts]:
+                player.gold += 1
             if isinstance(action, ThievesLair):
                 while True:
                     n_cards_to_pay = action.district.cost - action.gold_cost

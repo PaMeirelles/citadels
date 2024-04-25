@@ -1,6 +1,6 @@
 from typing import List
 from option import Option
-from models import Character, District, PublicInfo, EndTurn, Ability, Build, Action, Forge, ThievesLair
+from models import Character, District, PublicInfo, EndTurn, Ability, Build, Action, Forge, ThievesLair, DistrictType
 
 
 class Player:
@@ -24,10 +24,14 @@ class Player:
 
         if built == 0 or (built < 3 and self.character.value == Character.Architect):
             for i, c in enumerate(self.cards):
-                if c.name == "Thieves lair" and len(self.cards) - 1 + self.gold >= c.cost:
-                    for g in range(max(0, c.cost - len(self.cards) + 1), min(self.gold+1, 6)):
+                discount = 0
+                if c.district_type == DistrictType.Special and "Factory" in names:
+                    discount = 1
+                if c.name == "Thieves lair" and len(self.cards) - 1 + self.gold + discount >= c.cost:
+                    for g in range(max(0, c.cost - len(self.cards) + 1),
+                                   min(self.gold+1, c.cost - discount)):
                         actions.append(ThievesLair(c, i, g))
-                elif c.cost <= self.gold and (c.name not in names or "Quarry" in names):
+                elif c.cost - discount <= self.gold and (c.name not in names or "Quarry" in names):
                     actions.append(Build(c, i))
 
         if "Forge" in names and self.gold >= 2:
