@@ -30,8 +30,8 @@ class RandomChooser(EngineInterface):
     def choose_resource(self, public_info: List[PublicInfo]) -> Resource:
         return choice(list(Resource))
 
-    def choose_card(self, cards: (District, District), public_info: List[PublicInfo]) -> int:
-        return randint(0, 1)
+    def choose_card(self, cards: List[District], public_info: List[PublicInfo]) -> int:
+        return randint(0, len(cards)-1)
 
     def choose_character(self, available_options: List[Character], public_info: List[PublicInfo]) -> int:
         return randint(0, len(available_options)-1)

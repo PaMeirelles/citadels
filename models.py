@@ -79,6 +79,11 @@ class EndTurn(Action):
 
 
 @dataclass
+class Forge(Action):
+    pass
+
+
+@dataclass
 class Marker:
     pass
 

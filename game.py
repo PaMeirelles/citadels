@@ -1,7 +1,7 @@
 from random import shuffle
 from option import Some
 from models import Character, Action, EndTurn, Build, Ability, AssassinMarker, ThiefMarker, SwapHands, \
-    ChangeCards, DistrictType, Resource, NoTarget
+    ChangeCards, DistrictType, Resource, NoTarget, Forge
 from player import Player
 from utility import retrieve_cards, has_all_types, get_engine_by_name, get_order
 from stats import Stats
@@ -10,7 +10,7 @@ from stats import Stats
 class Game:
     def __init__(self, num_players):
         self.players = [Player(i) for (i, _) in enumerate(range(num_players))]
-        self.deck = retrieve_cards(avoid_special=True)
+        self.deck = retrieve_cards()
         self.markers = {}
         self.crowed = 1
         self.finishing_order = []
@@ -58,6 +58,11 @@ class Game:
             player.districts.append(player.cards.pop(action.card_id))
             if len(player.districts) == 7:
                 self.finishing_order.append(player.player_id)
+            if action.district.district_type == DistrictType.Special:
+                self.stats.special_dict[action.district.name] = player.player_id
+        elif isinstance(action, Forge):
+            player.gold -= 2
+            self.draw(player, 3)
         elif isinstance(action, Ability):
             player.used_ability = True
             public_info = self.get_public_info()
@@ -84,15 +89,21 @@ class Game:
                 for card in player.districts:
                     if card.district_type == DistrictType.Noble:
                         player.gold += 1
+                if "Magical school" in [x.name for x in player.districts]:
+                    player.gold += 1
                 self.crowed = player.player_id
             elif action.character == Character.Bishop:
                 for card in player.districts:
                     if card.district_type == DistrictType.Religious:
                         player.gold += 1
+                if "Magical school" in [x.name for x in player.districts]:
+                    player.gold += 1
             elif action.character == Character.Merchant:
                 for card in player.districts:
                     if card.district_type == DistrictType.Trade:
                         player.gold += 1
+                if "Magical school" in [x.name for x in player.districts]:
+                    player.gold += 1
                 player.gold += 1
             elif action.character == Character.Architect:
                 self.draw(player, 2)
@@ -100,13 +111,15 @@ class Game:
                 for card in player.districts:
                     if card.district_type == DistrictType.Military:
                         player.gold += 1
+                if "Magical school" in [x.name for x in player.districts]:
+                    player.gold += 1
                 w = engine.warlord(self.get_public_info())
                 if isinstance(w, NoTarget):
                     return
                 player_target = self.players[w.player_id]
                 if player_target.character != Character.Bishop and player_target not in self.finishing_order:
                     d = player_target.districts[w.district_id]
-                    if player.gold >= d.cost - 1:
+                    if player.gold >= d.cost - 1 and d.name != "Keep":
                         player.gold -= (d.cost - 1)
                         player_target.districts.pop(w.district_id)
                         self.deck.append(d)
@@ -140,15 +153,16 @@ class Game:
                     p.cards.append(self.deck.pop())
                     pass
                 else:
-                    card_1 = self.deck.pop()
-                    card_2 = self.deck.pop()
-                    chosen_card = engine.choose_card((card_1, card_2), public_info)
-                    if chosen_card == 0:
-                        p.cards.append(card_1)
-                        self.deck.append(card_2)
-                    elif chosen_card == 1:
-                        p.cards.append(card_2)
-                        self.deck.append(card_1)
+                    if "Library" in [x.name for x in p.districts]:
+                        self.draw(p, 2)
+                    else:
+                        if "Laboratory" in [x.name for x in p.districts] and len(self.deck) > 2:
+                            card_options = self.deck[:3]
+                        else:
+                            card_options = self.deck[:2]
+                        chosen_card = engine.choose_card(card_options, public_info)
+                        p.cards.append(self.deck.pop(chosen_card))
+
             built = 0
             while True:
                 options = p.generate_actions(built)
@@ -162,6 +176,7 @@ class Game:
     def evaluate(self):
         scores = [0 for _ in self.players]
         for i, p in enumerate(self.players):
+            names = set([x.name for x in p.districts])
             for d in p.districts:
                 scores[i] += d.cost
             if self.finishing_order[0] == i:
@@ -171,18 +186,30 @@ class Game:
 
             if has_all_types(p.districts):
                 scores[i] += 2
+
+            if "Dragon's gate" in names:
+                scores[i] += 2
+            if "Imperial treasure" in names:
+                scores[i] += p.gold
+            if "Maps room" in names:
+                scores[i] += len(p.cards)
+            if "Statue" in names and self.crowed == p.player_id:
+                scores[i] += 5
+            if "Wishing well" in names:
+                scores[i] += len([x for x in p.districts if x.district_type == DistrictType.Special])
+
         return scores
 
     def play(self):
         while len(self.finishing_order) == 0:
             self.role_selection()
             self.play_turns()
-            self.sanity_check()
             self.turn += 1
             self.markers = {}
+            self.sanity_check()
 
     def sanity_check(self):
-        total_cards = 54
+        total_cards = 68
         cards_in_play = len(self.deck) + sum([len(p.cards) for p in self.players]) + sum([len(p.districts) for p in self.players])
         if cards_in_play != total_cards:
             raise Exception

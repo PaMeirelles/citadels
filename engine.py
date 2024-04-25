@@ -14,7 +14,7 @@ class EngineInterface(ABC):
         pass
 
     @abstractmethod
-    def choose_card(self, cards: Tuple[District, District], public_info: List[PublicInfo]) -> int:
+    def choose_card(self, cards: List[District], public_info: List[PublicInfo]) -> int:
         pass
 
     @abstractmethod

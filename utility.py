@@ -18,8 +18,13 @@ def retrieve_cards(avoid_special=False):
 
 def has_all_types(districts: List[District]):
     types = set([x.district_type for x in districts])
-    return (DistrictType.Trade in types and DistrictType.Religious in types and DistrictType.Noble in types and
-            DistrictType.Military in types)
+    types.discard(DistrictType.Special)
+
+    types_count = len(types)
+    if "Haunted neighborhood" in [x.name for x in districts]:
+        types_count += 1
+
+    return types_count >= 4
 
 
 def get_engine_by_name(name):
