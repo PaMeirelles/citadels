@@ -69,6 +69,13 @@ class Build(Action):
 
 
 @dataclass
+class ThievesLair(Build):
+    district: District
+    card_id: int
+    gold_cost: int
+
+
+@dataclass
 class Ability(Action):
     character: Character
 

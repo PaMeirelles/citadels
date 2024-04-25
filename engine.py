@@ -26,6 +26,10 @@ class EngineInterface(ABC):
         pass
 
     @abstractmethod
+    def discard_cards(self, n: int, cards: List[District], public_info: List[PublicInfo]) -> List[int]:
+        pass
+
+    @abstractmethod
     def magician(self, public_info: List[PublicInfo], myself: Player) -> MagicianPower:
         pass
 

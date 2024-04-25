@@ -2,11 +2,14 @@ from typing import List
 from engine import EngineInterface
 from models import Character, PublicInfo, District, Resource, Action, WarlordTarget, MagicianPower, SwapHands, \
     ChangeCards, NoTarget, WarlordOption
-from random import randint, choice, random
+from random import randint, choice, random, sample
 from player import Player
 
 
 class RandomChooser(EngineInterface):
+    def discard_cards(self, n: int, cards: List[District], public_info: List[PublicInfo]) -> List[int]:
+        return sample([i for i in range(len(cards))], n)
+
     def choose_target(self, character: Character, public_info: List[PublicInfo]) -> Character:
         return choice(list(Character))
 

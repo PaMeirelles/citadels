@@ -1,7 +1,7 @@
 from random import shuffle
 from option import Some
 from models import Character, Action, EndTurn, Build, Ability, AssassinMarker, ThiefMarker, SwapHands, \
-    ChangeCards, DistrictType, Resource, NoTarget, Forge
+    ChangeCards, DistrictType, Resource, NoTarget, Forge, ThievesLair
 from player import Player
 from utility import retrieve_cards, has_all_types, get_engine_by_name, get_order
 from stats import Stats
@@ -53,9 +53,24 @@ class Game:
             player.cards.append(self.deck.pop())
 
     def execute_action(self, action: Action, player: Player):
+        public_info = self.get_public_info()
+
         if isinstance(action, Build):
-            player.gold -= action.district.cost
-            player.districts.append(player.cards.pop(action.card_id))
+            if isinstance(action, ThievesLair):
+                while True:
+                    n_cards_to_pay = action.district.cost - action.gold_cost
+                    cards_to_pay = self.engines[player.player_id].discard_cards(n_cards_to_pay, player.cards,
+                                                                                public_info)
+                    if action.card_id not in cards_to_pay:
+                        break
+                self.deck += [player.cards[i] for i in cards_to_pay]
+                player.cards = [player.cards[i] for i in range(len(player.cards)) if i not in cards_to_pay]
+                player.gold -= action.gold_cost
+                player.cards = [x for x in player.cards if x != action.district]
+                self.deck.append(action.district)
+            else:
+                player.gold -= action.district.cost
+                player.districts.append(player.cards.pop(action.card_id))
             if len(player.districts) == 7:
                 self.finishing_order.append(player.player_id)
             if action.district.district_type == DistrictType.Special:
@@ -65,7 +80,6 @@ class Game:
             self.draw(player, 3)
         elif isinstance(action, Ability):
             player.used_ability = True
-            public_info = self.get_public_info()
             engine = self.engines[player.player_id]
             if action.character == Character.Assassin:
                 target = engine.choose_target(Character.Assassin, self.get_public_info())
