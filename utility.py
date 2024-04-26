@@ -1,5 +1,7 @@
 import csv
 from typing import List
+
+from basic_consistency import BasicConsistency
 from models import District, string_type_to_enum, DistrictType, Character
 from random_chooser import RandomChooser
 
@@ -30,6 +32,8 @@ def has_all_types(districts: List[District]):
 def get_engine_by_name(name):
     if name == "random_chooser":
         return RandomChooser()
+    elif name == "basic_consistency":
+        return BasicConsistency()
     else:
         raise ValueError
 

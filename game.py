@@ -14,7 +14,8 @@ class Game:
         self.markers = {}
         self.crowed = 1
         self.finishing_order = []
-        self.engines = [get_engine_by_name("random_chooser") for _ in range(num_players)]
+        self.engines = ([get_engine_by_name("basic_consistency")] +
+                        [get_engine_by_name("random_chooser") for _ in range(num_players - 1)])
         self.turn = 1
         self.stats = Stats(num_players)
 
@@ -159,7 +160,7 @@ class Game:
 
             public_info = self.get_public_info()
             engine = self.engines[p.player_id]
-            chosen_resource = engine.choose_resource(public_info)
+            chosen_resource = engine.choose_resource(public_info, p)
             if chosen_resource == Resource.Gold:
                 p.gold += 2
             elif chosen_resource == Resource.Cards:
@@ -176,13 +177,13 @@ class Game:
                             card_options = self.deck[:3]
                         else:
                             card_options = self.deck[:2]
-                        chosen_card = engine.choose_card(card_options, public_info)
+                        chosen_card = engine.choose_card(card_options, public_info, p)
                         p.cards.append(self.deck.pop(chosen_card))
 
             built = 0
             while True:
                 options = p.generate_actions(built)
-                action = engine.choose_action(options, public_info)
+                action = engine.choose_action(options, public_info, p)
                 self.execute_action(action, p)
                 if isinstance(action, EndTurn):
                     break

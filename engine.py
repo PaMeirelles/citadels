@@ -10,15 +10,15 @@ class EngineInterface(ABC):
         pass
 
     @abstractmethod
-    def choose_resource(self, public_info: List[PublicInfo]) -> Resource:
+    def choose_resource(self, public_info: List[PublicInfo], myself: Player) -> Resource:
         pass
 
     @abstractmethod
-    def choose_card(self, cards: List[District], public_info: List[PublicInfo]) -> int:
+    def choose_card(self, cards: List[District], public_info: List[PublicInfo], myself: Player) -> int:
         pass
 
     @abstractmethod
-    def choose_action(self, options: List[Action], public_info: List[PublicInfo]) -> Action:
+    def choose_action(self, options: List[Action], public_info: List[PublicInfo], myself: Player) -> Action:
         pass
 
     @abstractmethod
