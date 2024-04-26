@@ -8,14 +8,13 @@ from stats import Stats
 
 
 class Game:
-    def __init__(self, num_players):
+    def __init__(self, num_players, engines):
         self.players = [Player(i) for (i, _) in enumerate(range(num_players))]
         self.deck = retrieve_cards()
         self.markers = {}
         self.crowed = 0
         self.finishing_order = []
-        self.engines = ([get_engine_by_name("basic_abilities")] +
-                        [get_engine_by_name("random_chooser") for _ in range(num_players-1)])
+        self.engines = engines
         self.turn = 1
         self.stats = Stats(num_players)
 
@@ -42,7 +41,7 @@ class Game:
         public_info = self.get_public_info()
 
         for p in self.players[self.crowed:] + self.players[:self.crowed]:
-            chosen_id = self.engines[p.player_id].choose_character(characters, public_info)
+            chosen_id = self.engines[p.player_id].choose_character(characters, public_info, p)
             p.character = Some(characters.pop(chosen_id))
 
             self.stats.character_matrix[p.player_id][get_order(p.character.value)-1] += 1

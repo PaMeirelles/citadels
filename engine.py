@@ -8,7 +8,7 @@ from player import Player
 class EngineInterface(ABC):
 
     @abstractmethod
-    def choose_character(self, available_options: List[Character], public_info: PublicInfo) -> int:
+    def choose_character(self, available_options: List[Character], public_info: PublicInfo, myself: Player) -> int:
         pass
 
     @abstractmethod

@@ -105,6 +105,6 @@ class BasicAbilities(EngineInterface):
         else:
             return sorted(cant_afford, key=lambda x: cards[x].cost)[0]
 
-    def choose_character(self, available_options: List[Character], public_info: PublicInfo) -> int:
+    def choose_character(self, available_options: List[Character], public_info: PublicInfo, myself: Player) -> int:
         self.role_options = [x for x in available_options]
         return randint(0, len(available_options) - 1)
