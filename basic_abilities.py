@@ -2,7 +2,7 @@ from typing import List
 from engine import EngineInterface
 from models import Character, District, Resource, Action, WarlordTarget, MagicianPower, SwapHands, \
     ChangeCards, NoTarget, WarlordOption, Ability, Build, PublicInfo
-from random import randint, choice, random, sample
+from random import randint, choice, random, sample, shuffle
 from player import Player
 
 
@@ -55,13 +55,16 @@ class BasicAbilities(EngineInterface):
         raise ValueError
 
     def magician(self, public_info: PublicInfo, myself: Player) -> MagicianPower:
-        biggest_hand = sorted([(i, x.num_cards) for i, x in enumerate(public_info.player_public_info)],
-                              key=lambda x: -x[1])[0][0]
+        lst = [(i, x.num_cards) for i, x in enumerate(public_info.player_public_info)]
+        shuffle(lst)
+        biggest_hand = sorted(lst, key=lambda x: -x[1])[0][0]
 
         return SwapHands(biggest_hand)
 
     def warlord(self, public_info: PublicInfo, myself: Player) -> WarlordOption:
-        for i, p in enumerate(public_info.player_public_info):
+        lst = list(enumerate(public_info.player_public_info))
+        shuffle(lst)
+        for i, p in lst:
             if i == myself.player_id:
                 continue
             for j, d in enumerate(public_info.player_public_info[i].districts):

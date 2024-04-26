@@ -6,11 +6,12 @@ from player import Player
 
 
 def get_best_basic_genetic():
-    best_genes = [1.0669367128441205, 1.9466467290738263, 0.8434185790556253, 1.476531567251708, 0.31403025494647085,
-                  0.21021067271783633, 0.1918129528782372, 0.266664947098975]
+    best_genes = [0.9783701214983467, 0.9665306151785001, 0.6122460569228687, 1.0678189251978236, 0.3282948123261767,
+                  0.599630362630095, 1.1112367557854417, 0.25914538633473455]
 
     return BasicGenetic(best_genes[0], best_genes[1], best_genes[2], best_genes[3], best_genes[4], best_genes[5],
                         best_genes[6], best_genes[7])
+
 
 class BasicGenetic(Genetic):
     def __init__(self, aw, tw, mw, gw, bw, cw, qw, ww):
@@ -37,13 +38,12 @@ class BasicGenetic(Genetic):
                 role_scores[i] += average_gold_expectation * self.tw
             elif role == Character.Magician:
                 biggest_hand = get_biggest_hand(public_info)
-                role_scores[i] += (biggest_hand[1] - len(myself.cards) * self.mw)
+                role_scores[i] += (biggest_hand[1] - len(myself.cards)) * self.mw
+
             elif role == Character.King:
                 noble_d = len([x for x in myself.districts if x.district_type == DistrictType.Noble])
                 role_scores[i] += noble_d * self.gw
-                positions = [x for x in range(len(public_info.player_public_info))]
-                my_position = (positions[public_info.crown:] + positions[:public_info.crown]).index(myself.player_id)
-                role_scores[i] += self.cw * my_position  # Crown value
+                role_scores[i] += self.cw
             elif role == Character.Bishop:
                 religious_d = len([x for x in myself.districts if x.district_type == DistrictType.Religious])
                 role_scores[i] += religious_d * self.gw + self.bw

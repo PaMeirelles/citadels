@@ -7,7 +7,7 @@ import numpy as np
 from engine import EngineInterface
 from models import Character, District, Resource, Action, WarlordTarget, MagicianPower, SwapHands, \
     NoTarget, WarlordOption, Ability, Build, PublicInfo, DistrictType
-from random import choice, sample
+from random import choice, sample, shuffle
 from player import Player
 
 
@@ -133,12 +133,16 @@ class Genetic(EngineInterface):
         raise ValueError
 
     def magician(self, public_info: PublicInfo, myself: Player) -> MagicianPower:
-        biggest_hand = get_biggest_hand(public_info)
+        lst = [(i, x.num_cards) for i, x in enumerate(public_info.player_public_info)]
+        shuffle(lst)
+        biggest_hand = sorted(lst, key=lambda x: -x[1])[0][0]
 
-        return SwapHands(biggest_hand[0])
+        return SwapHands(biggest_hand)
 
     def warlord(self, public_info: PublicInfo, myself: Player) -> WarlordOption:
-        for i, p in enumerate(public_info.player_public_info):
+        lst = list(enumerate(public_info.player_public_info))
+        shuffle(lst)
+        for i, p in lst:
             if i == myself.player_id:
                 continue
             for j, d in enumerate(public_info.player_public_info[i].districts):

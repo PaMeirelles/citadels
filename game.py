@@ -202,7 +202,7 @@ class Game:
                 scores[i] += 2
 
             if has_all_types(p.districts):
-                scores[i] += 2
+                scores[i] += 3
 
             if "Dragon's gate" in names:
                 scores[i] += 2

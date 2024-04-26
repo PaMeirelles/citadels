@@ -3,6 +3,7 @@ from typing import List
 
 from basic_abilities import BasicAbilities
 from basic_consistency import BasicConsistency
+from fast_builder import FastBuilder
 from models import District, string_type_to_enum, DistrictType, Character
 from random_chooser import RandomChooser
 
@@ -37,6 +38,8 @@ def get_engine_by_name(name):
         return BasicConsistency()
     elif name == "basic_abilities":
         return BasicAbilities()
+    elif name == "fast_builder":
+        return FastBuilder()
     else:
         raise ValueError
 

@@ -1,6 +1,9 @@
+from math import ceil, floor
+
 import numpy as np
 
 from basic_genetic import get_best_basic_genetic
+from fast_builder import get_best_fast_builder
 from game import Game
 from random import seed
 from tqdm import tqdm
@@ -8,7 +11,7 @@ from tqdm import tqdm
 from genetic import get_best_genetic, get_my_genetic
 from utility import get_engine_by_name
 
-seed(2)
+seed(1)
 
 print_every = 1000
 
@@ -18,12 +21,31 @@ counter = 0
 
 while True:
     counter += 1
-    game = Game(6, [get_best_basic_genetic()] + [get_engine_by_name("basic_abilities") for _ in range(5)])
+    game = Game(6, [get_best_fast_builder()] + [get_engine_by_name("fast_builder") for _ in range(5)])
     game.play()
-    scores = [-x for x in game.evaluate()]
-    positions = np.argsort(np.argsort(scores)).tolist()
+    scores = [x for x in game.evaluate()]
+    score_counts = {}
+    positions = [0 for _ in range(6)]
 
-    bc[positions[0]] += 1
+    for i, score in enumerate(scores):
+        score_counts.setdefault(score, []).append(i)
+
+    current_position = len(scores) - 1
+    for score in sorted(score_counts.keys()):
+        count = len(score_counts[score])
+        if count == 1:
+            me = score_counts[score][0]
+            positions[me] = current_position
+        else:
+            for i in range(count):
+                positions[score_counts[score][i]] = (2 * current_position - count + 1) / 2
+        current_position -= count
+
+    if positions[0].is_integer():
+        bc[int(positions[0])] += 1
+    else:
+        bc[int(ceil(positions[0]))] += .5
+        bc[int(floor(positions[0]))] += .5
     for i in range(6):
         positions_sum[i] += (1 + positions[i])
 

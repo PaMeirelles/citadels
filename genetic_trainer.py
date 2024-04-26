@@ -1,4 +1,5 @@
-from basic_genetic import BasicGenetic
+from basic_genetic import BasicGenetic, get_best_basic_genetic
+from fast_builder import FastBuilder
 from game import Game
 from random import seed
 import numpy as np
@@ -7,16 +8,15 @@ from genetic import Genetic
 from utility import get_engine_by_name
 
 seed(2)
-GAMES_BY_ROUND = 2500
+GAMES_BY_ROUND = 1000
 
 
 def eval_func(chromosome):
-    to_watch = BasicGenetic(chromosome[0], chromosome[1], chromosome[2], chromosome[3], chromosome[4], chromosome[5],
-                            chromosome[6], chromosome[7])
+    to_watch = FastBuilder(chromosome)
 
     fit_score = 0
     for _ in range(GAMES_BY_ROUND):
-        game = Game(6, [to_watch] + [get_engine_by_name("basic_abilities") for _ in range(5)])
+        game = Game(6, [to_watch] + [get_engine_by_name("fast_builder") for _ in range(5)])
         game.play()
         scores = [-x for x in game.evaluate()]
         positions = np.argsort(np.argsort(scores)).tolist()
@@ -44,14 +44,14 @@ toolbox.register("mutate", tools.mutGaussian, mu=.5, sigma=0.2, indpb=0.2)
 
 toolbox.register("select", tools.selTournament, tournsize=3)
 
-population = toolbox.population(n=20)
+population = toolbox.population(n=50)
 
 # Register a statistics object to gather statistics
 stats = tools.Statistics(lambda ind: ind.fitness.values)
 stats.register("max", np.max)
 
 # Run the algorithm with the stats object
-algorithms.eaSimple(population, toolbox, cxpb=0.5, mutpb=0.2, ngen=10, stats=stats, verbose=True)
+algorithms.eaSimple(population, toolbox, cxpb=0.5, mutpb=0.2, ngen=20, stats=stats, verbose=True)
 
 # Best individual
 best_individual = tools.selBest(population, k=1)[0]
