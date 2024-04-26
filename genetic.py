@@ -1,6 +1,9 @@
 import math
 from math import log
 from typing import List, Tuple
+
+import numpy as np
+
 from engine import EngineInterface
 from models import Character, District, Resource, Action, WarlordTarget, MagicianPower, SwapHands, \
     NoTarget, WarlordOption, Ability, Build, PublicInfo, DistrictType
@@ -40,8 +43,22 @@ def calculate_hit_chance(len_role_options):
     return chance_before, chance_after
 
 
+def get_best_genetic():
+    best_genes = [-0.47799918628651966, -0.760409716185604, 0.5269611955962961, 1.6572582167933207, -0.2528053409757393,
+                  -0.49067756119790285, -0.5882979974517359]
+    chromosome = np.clip(best_genes, -0.99, 1)
+
+    return Genetic(chromosome[0], chromosome[1] * 5 + 5, chromosome[2] * 5 + 5, chromosome[3], chromosome[4],
+                   chromosome[5],
+                   chromosome[6])
+
+
+def get_my_genetic():
+    return Genetic(2, 2,3, 0.2, .1, .1, .1)
+
+
 class Genetic(EngineInterface):
-    def __init__(self, turn_c, gold_c, card_c, pos_c, destruction_c, multi_build_c, protection_c):
+    def __init__(self, turn_c, gold_c, card_c, pos_c, destruction_c, multi_build_c, protection_c, gnt=None):
         super().__init__()
         self.role_options = []
         self.turn_c = turn_c
@@ -51,6 +68,10 @@ class Genetic(EngineInterface):
         self.destruction_c = destruction_c
         self.multi_build_c = multi_build_c
         self.protection_c = protection_c
+        if gnt is None:
+            self.gold_next_turn = gold_c
+        else:
+            self.gold_next_turn = gnt
 
     def discard_cards(self, n: int, cards: List[District], public_info: PublicInfo) -> List[int]:
         return sample([i for i in range(len(cards))], n)
@@ -98,7 +119,7 @@ class Genetic(EngineInterface):
             average_gold_gain_if_before, average_gold_gain_if_after = \
                 self.calculate_average_gold_expectation(public_info, myself)
 
-            if average_gold_gain_if_before > average_gold_gain_if_after:
+            if average_gold_gain_if_before > average_gold_gain_if_after or len(characters_after) == 1:
                 options = characters_before
             else:
                 options = characters_after
@@ -142,9 +163,8 @@ class Genetic(EngineInterface):
         return choice(options)
 
     def choose_resource(self, public_info: PublicInfo, myself: Player) -> Resource:
-        value_extra_gold = log(myself.gold + 2, self.gold_c) - log(myself.gold, self.gold_c)
-        value_extra_card = log(len(myself.cards) + 1, self.card_c) - log(len(myself.cards), self.card_c)
-        if value_extra_card > value_extra_gold:
+        names = [x.name for x in myself.districts]
+        if len([x for x in myself.cards if x.name not in names]) == 0:
             return Resource.Cards
         else:
             return Resource.Gold
@@ -182,10 +202,10 @@ class Genetic(EngineInterface):
             elif role == Character.Thief:
                 ave = self.calculate_average_gold_expectation(public_info, myself)
                 average_gold_expectation = max(ave)
-                role_scores[i] += (log(myself.gold + average_gold_expectation, self.gold_c) -
-                                   log(myself.gold, self.gold_c)) * (6 / 5)  # premium for stealing
+                role_scores[i] += (log(myself.gold + average_gold_expectation, self.gold_next_turn) -
+                                   log(myself.gold, self.gold_next_turn)) * (6 / 5)  # premium for stealing
                 chance_is_taken = self.chance_is_taken(Character.Thief)
-                role_scores[i] += chance_is_taken * (47 / 180) * myself.gold  # premium for not being robbed
+                role_scores[i] += chance_is_taken * (47 / 180) * log(myself.gold, self.gold_c)  # premium for not being robbed
             elif role == Character.Magician:
                 biggest_hand = get_biggest_hand(public_info)
                 role_scores[i] += (log(biggest_hand[1], self.card_c) - log(len(myself.cards), self.card_c)) * (6 / 5)

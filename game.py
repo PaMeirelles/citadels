@@ -1,4 +1,4 @@
-from random import shuffle
+from random import shuffle, randint
 from option import Some
 from models import Character, Action, EndTurn, Build, Ability, AssassinMarker, ThiefMarker, SwapHands, \
     ChangeCards, DistrictType, Resource, NoTarget, Forge, ThievesLair, PublicInfo
@@ -12,7 +12,7 @@ class Game:
         self.players = [Player(i) for (i, _) in enumerate(range(num_players))]
         self.deck = retrieve_cards()
         self.markers = {}
-        self.crowed = 0
+        self.crowed = randint(0, num_players-1)
         self.finishing_order = []
         self.engines = engines
         self.turn = 1

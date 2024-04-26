@@ -36,5 +36,5 @@ class RandomChooser(EngineInterface):
     def choose_card(self, cards: List[District], public_info: PublicInfo, myself: Player) -> int:
         return randint(0, len(cards)-1)
 
-    def choose_character(self, available_options: List[Character], public_info: PublicInfo) -> int:
+    def choose_character(self, available_options: List[Character], public_info: PublicInfo, myself:Player) -> int:
         return randint(0, len(available_options)-1)
