@@ -1,6 +1,6 @@
 from typing import List
 from option import Option
-from models import Character, District, PublicInfo, EndTurn, Ability, Build, Action, Forge, ThievesLair, DistrictType
+from models import Character, District, PlayerPublicInfo, EndTurn, Ability, Build, Action, Forge, ThievesLair, DistrictType
 
 
 class Player:
@@ -13,7 +13,7 @@ class Player:
         self.used_ability = False
 
     def get_public_info(self):
-        return PublicInfo(self.gold, len(self.cards), self.districts)
+        return PlayerPublicInfo(self.gold, len(self.cards), self.districts)
 
     def generate_actions(self, built) -> List[Action]:
         actions = [EndTurn()]

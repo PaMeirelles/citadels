@@ -1,6 +1,7 @@
 import csv
 from typing import List
 
+from basic_abilities import BasicAbilities
 from basic_consistency import BasicConsistency
 from models import District, string_type_to_enum, DistrictType, Character
 from random_chooser import RandomChooser
@@ -34,6 +35,8 @@ def get_engine_by_name(name):
         return RandomChooser()
     elif name == "basic_consistency":
         return BasicConsistency()
+    elif name == "basic_abilities":
+        return BasicAbilities()
     else:
         raise ValueError
 

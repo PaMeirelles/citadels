@@ -1,7 +1,7 @@
 from random import shuffle
 from option import Some
 from models import Character, Action, EndTurn, Build, Ability, AssassinMarker, ThiefMarker, SwapHands, \
-    ChangeCards, DistrictType, Resource, NoTarget, Forge, ThievesLair
+    ChangeCards, DistrictType, Resource, NoTarget, Forge, ThievesLair, PublicInfo
 from player import Player
 from utility import retrieve_cards, has_all_types, get_engine_by_name, get_order
 from stats import Stats
@@ -12,10 +12,10 @@ class Game:
         self.players = [Player(i) for (i, _) in enumerate(range(num_players))]
         self.deck = retrieve_cards()
         self.markers = {}
-        self.crowed = 1
+        self.crowed = 0
         self.finishing_order = []
-        self.engines = ([get_engine_by_name("basic_consistency")] +
-                        [get_engine_by_name("random_chooser") for _ in range(num_players - 1)])
+        self.engines = ([get_engine_by_name("basic_abilities")] +
+                        [get_engine_by_name("random_chooser") for _ in range(num_players-1)])
         self.turn = 1
         self.stats = Stats(num_players)
 
@@ -32,7 +32,7 @@ class Game:
             p.gold = 2
 
     def get_public_info(self):
-        return [p.get_public_info() for p in self.players]
+        return PublicInfo([p.get_public_info() for p in self.players], self.crowed)
 
     def role_selection(self):
         characters = list(Character)
@@ -57,7 +57,8 @@ class Game:
         public_info = self.get_public_info()
 
         if isinstance(action, Build):
-            if action.district.district_type == DistrictType.Special and "Factory" in [x.name for x in player.districts]:
+            if (action.district.district_type == DistrictType.Special and
+                    "Factory" in [x.name for x in player.districts]):
                 player.gold += 1
             if isinstance(action, ThievesLair):
                 while True:
@@ -85,10 +86,10 @@ class Game:
             player.used_ability = True
             engine = self.engines[player.player_id]
             if action.character == Character.Assassin:
-                target = engine.choose_target(Character.Assassin, self.get_public_info())
+                target = engine.choose_target(Character.Assassin, self.get_public_info(), player)
                 self.markers.setdefault(target, []).append(AssassinMarker())
             elif action.character == Character.Thief:
-                target = engine.choose_target(Character.Thief, self.get_public_info())
+                target = engine.choose_target(Character.Thief, self.get_public_info(), player)
                 self.markers.setdefault(target, []).append(ThiefMarker(player.player_id))
             elif action.character == Character.Magician:
                 mp = engine.magician(public_info, player)
@@ -130,7 +131,7 @@ class Game:
                         player.gold += 1
                 if "Magical school" in [x.name for x in player.districts]:
                     player.gold += 1
-                w = engine.warlord(self.get_public_info())
+                w = engine.warlord(self.get_public_info(), player)
                 if isinstance(w, NoTarget):
                     return
                 player_target = self.players[w.player_id]
@@ -227,7 +228,8 @@ class Game:
 
     def sanity_check(self):
         total_cards = 68
-        cards_in_play = len(self.deck) + sum([len(p.cards) for p in self.players]) + sum([len(p.districts) for p in self.players])
+        cards_in_play = (len(self.deck) + sum([len(p.cards) for p in self.players]) +
+                         sum([len(p.districts) for p in self.players]))
         if cards_in_play != total_cards:
             raise Exception
 

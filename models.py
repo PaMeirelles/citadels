@@ -51,10 +51,16 @@ class District:
 
 
 @dataclass
-class PublicInfo:
+class PlayerPublicInfo:
     gold: int
     num_cards: int
     districts: List[District]
+
+
+@dataclass
+class PublicInfo:
+    player_public_info: List[PlayerPublicInfo]
+    crown: int
 
 
 @dataclass

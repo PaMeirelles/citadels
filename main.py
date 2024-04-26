@@ -29,5 +29,3 @@ while True:
         for i in range(6):
             print(f"{i+1}: {round(bc[i] * 100 / sum(bc), 3)}%")
         print('-' * 80)
-
-
