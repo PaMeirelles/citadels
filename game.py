@@ -1,9 +1,12 @@
 from random import shuffle, randint
 from typing import List
 from option import Some
+
+from constants import DRAGONS_GATE, FACTORY, IMPERIAL_TREASURE, MAPS_ROOM, STATUE, WISHING_WELL, MAGICAL_SCHOOL, KEEP, \
+    LIBRARY
 from engine import EngineInterface
 from models import Character, Action, EndTurn, Build, Ability, AssassinMarker, ThiefMarker, SwapHands, \
-    ChangeCards, DistrictType, Resource, Forge, ThievesLair, PublicInfo
+    ChangeCards, DistrictType, Resource, Forge, ThievesLair, PublicInfo, Laboratory
 from player import Player
 from utility import retrieve_cards, has_all_types, get_order
 from stats import Stats
@@ -57,10 +60,11 @@ class Game:
 
     def execute_action(self, action: Action, player: Player):
         public_info = self.get_public_info()
+        names = [x.name for x in player.districts]
 
         if isinstance(action, Build):
             if (action.district.district_type == DistrictType.Special and
-                    "Factory" in [x.name for x in player.districts]):
+                    FACTORY in [x.name for x in player.districts]):
                 player.gold += 1
             if isinstance(action, ThievesLair):
                 while True:
@@ -84,6 +88,10 @@ class Game:
         elif isinstance(action, Forge):
             player.gold -= 2
             self.draw(player, 3)
+        elif isinstance(action, Laboratory):
+            player.gold += 1
+            to_discard = self.engines[player.player_id].discard_cards(1, player.cards, public_info)
+            player.cards.pop(to_discard[0])
         elif isinstance(action, Ability):
             player.used_ability = True
             engine = self.engines[player.player_id]
@@ -109,20 +117,20 @@ class Game:
                 for card in player.districts:
                     if card.district_type == DistrictType.Noble:
                         player.gold += 1
-                if "Magical school" in [x.name for x in player.districts]:
+                if MAGICAL_SCHOOL in names:
                     player.gold += 1
                 self.crowed = player.player_id
             elif action.character == Character.Bishop:
                 for card in player.districts:
                     if card.district_type == DistrictType.Religious:
                         player.gold += 1
-                if "Magical school" in [x.name for x in player.districts]:
+                if MAGICAL_SCHOOL in names:
                     player.gold += 1
             elif action.character == Character.Merchant:
                 for card in player.districts:
                     if card.district_type == DistrictType.Trade:
                         player.gold += 1
-                if "Magical school" in [x.name for x in player.districts]:
+                if MAGICAL_SCHOOL in names:
                     player.gold += 1
                 player.gold += 1
             elif action.character == Character.Architect:
@@ -131,7 +139,7 @@ class Game:
                 for card in player.districts:
                     if card.district_type == DistrictType.Military:
                         player.gold += 1
-                if "Magical school" in [x.name for x in player.districts]:
+                if MAGICAL_SCHOOL in names:
                     player.gold += 1
                 w = engine.warlord(self.get_public_info(), player)
                 if w == NONE:
@@ -140,7 +148,7 @@ class Game:
                 player_target = self.players[w.player_id]
                 if player_target.character != Character.Bishop and player_target not in self.finishing_order:
                     d = player_target.districts[w.district_id]
-                    if player.gold >= d.cost - 1 and d.name != "Keep":
+                    if player.gold >= d.cost - 1 and d.name != KEEP:
                         player.gold -= (d.cost - 1)
                         player_target.districts.pop(w.district_id)
                         self.deck.append(d)
@@ -148,6 +156,7 @@ class Game:
     def play_turns(self):
         ordered_players = sorted(self.players, key=lambda x: get_order(x.character.value))
         for p in ordered_players:
+            names = [x.name for x in p.districts]
             p.used_ability = False
             markers = self.markers.get(p.character.value, [])
             killed = False
@@ -174,13 +183,10 @@ class Game:
                     p.cards.append(self.deck.pop())
                     pass
                 else:
-                    if "Library" in [x.name for x in p.districts]:
+                    if LIBRARY in names:
                         self.draw(p, 2)
                     else:
-                        if "Laboratory" in [x.name for x in p.districts] and len(self.deck) > 2:
-                            card_options = self.deck[:3]
-                        else:
-                            card_options = self.deck[:2]
+                        card_options = self.deck[:2]
                         chosen_card = engine.choose_card(card_options, public_info, p)
                         p.cards.append(self.deck.pop(chosen_card))
 
@@ -197,9 +203,19 @@ class Game:
     def evaluate(self):
         scores = [0 for _ in self.players]
         for i, p in enumerate(self.players):
-            names = set([x.name for x in p.districts])
             for d in p.districts:
                 scores[i] += d.cost
+                if d.name == DRAGONS_GATE:
+                    scores[i] += 2
+                if d.name == IMPERIAL_TREASURE:
+                    scores[i] += p.gold
+                if d.name == MAPS_ROOM:
+                    scores[i] += len(p.cards)
+                if d.name == STATUE and self.crowed == p.player_id:
+                    scores[i] += 5
+                if d.name == WISHING_WELL:
+                    scores[i] += len([x for x in p.districts if x.district_type == DistrictType.Special])
+
             if self.finishing_order[0] == i:
                 scores[i] += 4
             elif i in self.finishing_order:
@@ -207,17 +223,6 @@ class Game:
 
             if has_all_types(p.districts):
                 scores[i] += 3
-
-            if "Dragon's gate" in names:
-                scores[i] += 2
-            if "Imperial treasure" in names:
-                scores[i] += p.gold
-            if "Maps room" in names:
-                scores[i] += len(p.cards)
-            if "Statue" in names and self.crowed == p.player_id:
-                scores[i] += 5
-            if "Wishing well" in names:
-                scores[i] += len([x for x in p.districts if x.district_type == DistrictType.Special])
 
         return scores
 

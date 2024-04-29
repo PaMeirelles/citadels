@@ -97,6 +97,11 @@ class Forge(Action):
 
 
 @dataclass
+class Laboratory(Action):
+    pass
+
+
+@dataclass
 class Marker:
     pass
 

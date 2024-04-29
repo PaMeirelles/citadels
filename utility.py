@@ -3,6 +3,7 @@ from typing import List
 
 from basic_abilities import BasicAbilities
 from basic_consistency import BasicConsistency
+from constants import HAUNTED_NEIGHBORHOOD
 from fast_builder import FastBuilder
 from models import District, string_type_to_enum, DistrictType, Character
 from random_chooser import RandomChooser
@@ -25,7 +26,7 @@ def has_all_types(districts: List[District]):
     types.discard(DistrictType.Special)
 
     types_count = len(types)
-    if "Haunted neighborhood" in [x.name for x in districts]:
+    if HAUNTED_NEIGHBORHOOD in [x.name for x in districts]:
         types_count += 1
 
     return types_count >= 4
