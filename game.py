@@ -1,8 +1,6 @@
 from random import shuffle, randint
 from typing import List
-
 from option import Some
-
 from engine import EngineInterface
 from models import Character, Action, EndTurn, Build, Ability, AssassinMarker, ThiefMarker, SwapHands, \
     ChangeCards, DistrictType, Resource, Forge, ThievesLair, PublicInfo
