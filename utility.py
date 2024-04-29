@@ -8,6 +8,7 @@ from constants import HAUNTED_NEIGHBORHOOD
 from fast_builder import FastBuilder
 from models import District, string_type_to_enum, DistrictType, Character
 from random_chooser import RandomChooser
+from smart_discard import SmartDiscard
 
 
 def retrieve_cards(avoid_special=False):
@@ -44,6 +45,8 @@ def get_engine_by_name(name):
         return FastBuilder()
     elif name == "basic_genetic":
         return get_best_basic_genetic()
+    elif name == "smart_discard":
+        return SmartDiscard()
     else:
         raise ValueError
 

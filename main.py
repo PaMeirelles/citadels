@@ -19,7 +19,7 @@ counter = 0
 
 while True:
     counter += 1
-    game = Game(6, [get_engine_by_name("fast_builder")] + [get_engine_by_name("basic_genetic") for _ in range(5)])
+    game = Game(6, [get_engine_by_name("smart_discard")] + [get_engine_by_name("fast_builder") for _ in range(5)])
     game.play()
     scores = [x for x in game.evaluate()]
     score_counts = {}

@@ -8,7 +8,7 @@ from player import Player
 
 
 class RandomChooser(EngineInterface):
-    def discard_cards(self, n: int, cards: List[District], public_info: PublicInfo) -> List[int]:
+    def discard_cards(self, n: int, cards: List[District], public_info: PublicInfo, myself: Player) -> List[int]:
         return sample([i for i in range(len(cards))], n)
 
     def choose_target(self, character: Character, public_info: PublicInfo, myself:Player) -> Character:

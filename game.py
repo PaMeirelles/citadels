@@ -67,17 +67,15 @@ class Game:
                     FACTORY in [x.name for x in player.districts]):
                 player.gold += 1
             if isinstance(action, ThievesLair):
-                while True:
-                    n_cards_to_pay = action.district.cost - action.gold_cost
-                    cards_to_pay = self.engines[player.player_id].discard_cards(n_cards_to_pay, player.cards,
-                                                                                public_info)
-                    if action.card_id not in cards_to_pay:
-                        break
-                self.deck += [player.cards[i] for i in cards_to_pay]
-                player.cards = [player.cards[i] for i in range(len(player.cards)) if i not in cards_to_pay]
-                player.gold -= action.gold_cost
-                player.cards = [x for x in player.cards if x != action.district]
-                self.deck.append(action.district)
+                n_cards_to_pay = action.district.cost - action.gold_cost
+                cards_to_pay = self.engines[player.player_id].discard_cards(n_cards_to_pay, player.cards,
+                                                                            public_info, player)
+                if action.card_id not in cards_to_pay:
+                    self.deck += [player.cards[i] for i in cards_to_pay]
+                    player.cards = [player.cards[i] for i in range(len(player.cards)) if i not in cards_to_pay]
+                    player.gold -= action.gold_cost
+                    player.cards = [x for x in player.cards if x != action.district]
+                    self.deck.append(action.district)
             else:
                 player.gold -= action.district.cost
                 player.districts.append(player.cards.pop(action.card_id))
@@ -90,7 +88,7 @@ class Game:
             self.draw(player, 3)
         elif isinstance(action, Laboratory):
             player.gold += 1
-            to_discard = self.engines[player.player_id].discard_cards(1, player.cards, public_info)
+            to_discard = self.engines[player.player_id].discard_cards(1, player.cards, public_info, player)
             self.deck.append(player.cards.pop(to_discard[0]))
 
         elif isinstance(action, Ability):
