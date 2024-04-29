@@ -3,6 +3,7 @@ from typing import List
 
 from basic_abilities import BasicAbilities
 from basic_consistency import BasicConsistency
+from basic_genetic import get_best_basic_genetic
 from constants import HAUNTED_NEIGHBORHOOD
 from fast_builder import FastBuilder
 from models import District, string_type_to_enum, DistrictType, Character
@@ -41,6 +42,8 @@ def get_engine_by_name(name):
         return BasicAbilities()
     elif name == "fast_builder":
         return FastBuilder()
+    elif name == "basic_genetic":
+        return get_best_basic_genetic()
     else:
         raise ValueError
 

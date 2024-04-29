@@ -91,7 +91,8 @@ class Game:
         elif isinstance(action, Laboratory):
             player.gold += 1
             to_discard = self.engines[player.player_id].discard_cards(1, player.cards, public_info)
-            player.cards.pop(to_discard[0])
+            self.deck.append(player.cards.pop(to_discard[0]))
+
         elif isinstance(action, Ability):
             player.used_ability = True
             engine = self.engines[player.player_id]

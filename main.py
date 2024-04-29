@@ -19,7 +19,7 @@ counter = 0
 
 while True:
     counter += 1
-    game = Game(6, [get_best_basic_genetic()] + [get_engine_by_name("basic_abilities") for _ in range(5)])
+    game = Game(6, [get_engine_by_name("fast_builder")] + [get_engine_by_name("basic_genetic") for _ in range(5)])
     game.play()
     scores = [x for x in game.evaluate()]
     score_counts = {}
@@ -49,8 +49,8 @@ while True:
 
     if counter % print_every == 0:
         print(positions_sum)
-        print(f"GE: {round(positions_sum[0] / counter, 3)}")
-        print(f"BA: {round(sum(positions_sum[1:]) / (5 * counter), 3)}")
+        print(f"WATCHED: {round(positions_sum[0] / counter, 3)}")
+        print(f"CONTROL: {round(sum(positions_sum[1:]) / (5 * counter), 3)}")
         print(f"Games: {counter}")
 
         for i in range(6):
