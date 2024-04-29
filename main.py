@@ -3,7 +3,6 @@ from math import ceil, floor
 import numpy as np
 
 from basic_genetic import get_best_basic_genetic
-from fast_builder import get_best_fast_builder
 from game import Game
 from random import seed
 from tqdm import tqdm
@@ -20,7 +19,7 @@ counter = 0
 
 while True:
     counter += 1
-    game = Game(6, [get_best_fast_builder()] + [get_engine_by_name("fast_builder") for _ in range(5)])
+    game = Game(6, [get_best_basic_genetic()] + [get_engine_by_name("basic_abilities") for _ in range(5)])
     game.play()
     scores = [x for x in game.evaluate()]
     score_counts = {}

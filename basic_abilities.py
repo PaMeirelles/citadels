@@ -1,7 +1,9 @@
+from typing import List
+
 from option import Option, Some, NONE
 from basic_consistency import BasicConsistency
 from models import Character, WarlordTarget, MagicianPower, SwapHands, PublicInfo
-from random import choice, shuffle
+from random import choice, shuffle, randint
 from player import Player
 
 
@@ -17,8 +19,8 @@ class BasicAbilities(BasicConsistency):
             else:
                 return choice([x for x in list(Character) if x not in self.role_options])
         elif character == Character.Thief:
-            characters_after = [x for x in self.role_options if x != Character.Thief]
-            characters_before = [x for x in list(Character) if x not in self.role_options]
+            characters_after = [x for x in self.role_options if x != Character.Thief and x != Character.Assassin]
+            characters_before = [x for x in list(Character) if x not in self.role_options and x != Character.Assassin]
 
             numbers = [x for x in range(len(public_info.player_public_info))]
             player_order = numbers[public_info.crown:] + numbers[:public_info.crown]
@@ -27,10 +29,10 @@ class BasicAbilities(BasicConsistency):
             players_before = player_order[:my_index]
             players_after = player_order[(my_index + 1):]
 
-            if len(players_before) == 0:
+            if len(characters_before) <= 1:
                 return choice([x for x in characters_after if x != Character.Assassin])
 
-            if len(players_after) == 0:
+            if len(characters_after) <= 1:
                 return choice([x for x in characters_before if x != Character.Assassin])
 
             player_gold_before = [public_info.player_public_info[i].gold for i in players_before]
@@ -67,3 +69,7 @@ class BasicAbilities(BasicConsistency):
                 if d.cost == 1:
                     return Some(WarlordTarget(i, j))
         return NONE
+
+    def choose_character(self, available_options: List[Character], public_info: PublicInfo, myself:Player) -> int:
+        self.role_options = available_options
+        return randint(0, len(available_options)-1)
