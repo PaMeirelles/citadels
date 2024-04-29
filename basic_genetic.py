@@ -1,20 +1,72 @@
-from typing import List
+from typing import List, Tuple
 
-from genetic import Genetic, calculate_hit_chance, get_biggest_hand
+from basic_abilities import BasicAbilities
 from models import Character, PublicInfo, DistrictType
 from player import Player
 
+BEST_GENES = [0.9783701214983467, 0.9665306151785001, 0.6122460569228687, 1.0678189251978236, 0.3282948123261767,
+              0.599630362630095, 1.1112367557854417, 0.25914538633473455]
+
+
+def get_biggest_hand(public_info: PublicInfo):
+    biggest_hand = sorted([(i, x.num_cards) for i, x in enumerate(public_info.player_public_info)],
+                          key=lambda x: -x[1])[0]
+
+    return biggest_hand
+
+
+def calculate_hit_chance(len_role_options):
+    num_opt_before = 8 - len_role_options
+    num_opt_after = len_role_options - 1
+
+    if num_opt_before == 0:
+        chance_before = 0
+    else:
+        chance_before = (num_opt_before - 1) / num_opt_before
+
+    if num_opt_after == 0:
+        chance_after = 0
+    else:
+        chance_after = (num_opt_after - 1) / num_opt_after
+
+    return chance_before, chance_after
+
 
 def get_best_basic_genetic():
-    best_genes = [0.9783701214983467, 0.9665306151785001, 0.6122460569228687, 1.0678189251978236, 0.3282948123261767,
-                  0.599630362630095, 1.1112367557854417, 0.25914538633473455]
-
-    return BasicGenetic(best_genes[0], best_genes[1], best_genes[2], best_genes[3], best_genes[4], best_genes[5],
-                        best_genes[6], best_genes[7])
+    return BasicGenetic(BEST_GENES[0], BEST_GENES[1], BEST_GENES[2], BEST_GENES[3], BEST_GENES[4], BEST_GENES[5],
+                        BEST_GENES[6], BEST_GENES[7])
 
 
-class BasicGenetic(Genetic):
+def calculate_average_gold_expectation(public_info, myself) -> Tuple[float, float]:
+    numbers = [x for x in range(len(public_info.player_public_info))]
+    player_order = numbers[public_info.crown:] + numbers[:public_info.crown]
+    my_index = player_order.index(myself.player_id)
+
+    players_before = player_order[:my_index]
+    players_after = player_order[(my_index + 1):]
+
+    player_gold_before = [public_info.player_public_info[i].gold for i in players_before]
+    player_gold_after = [public_info.player_public_info[i].gold for i in players_after]
+
+    if len(players_before) == 0:
+        average_player_gold_before = 0
+    else:
+        average_player_gold_before = sum(player_gold_before) / len(players_before)
+
+    if len(players_after) == 0:
+        average_player_gold_after = 0
+    else:
+        average_player_gold_after = sum(player_gold_after) / len(players_after)
+
+    average_gold_gain_if_before = len(players_before) / (len(players_before) + 1) * average_player_gold_before
+    average_gold_gain_if_after = len(players_after) / (len(players_after) + 1) * average_player_gold_after
+
+    return average_gold_gain_if_before, average_gold_gain_if_after
+
+
+class BasicGenetic(BasicAbilities):
     def __init__(self, aw, tw, mw, gw, bw, cw, qw, ww):
+        super().__init__()
         self.aw = aw
         self.tw = tw
         self.mw = mw
@@ -33,7 +85,7 @@ class BasicGenetic(Genetic):
                 chance_to_hit = max(hc)
                 role_scores[i] += chance_to_hit * self.aw
             elif role == Character.Thief:
-                ave = self.calculate_average_gold_expectation(public_info, myself)
+                ave = calculate_average_gold_expectation(public_info, myself)
                 average_gold_expectation = max(ave)
                 role_scores[i] += average_gold_expectation * self.tw
             elif role == Character.Magician:

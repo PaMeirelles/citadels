@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
-from typing import List, Tuple
-from models import Character, PlayerPublicInfo, Resource, District, Action, MagicianPower, WarlordTarget, WarlordOption, \
-    PublicInfo
+from typing import List
+from models import Character, Resource, District, Action, MagicianPower, WarlordTarget, PublicInfo
 from player import Player
+from option import Option
 
 
 class EngineInterface(ABC):
@@ -24,7 +24,7 @@ class EngineInterface(ABC):
         pass
 
     @abstractmethod
-    def choose_target(self, character: Character, public_info: PublicInfo, myself:Player) -> Character:
+    def choose_target(self, character: Character, public_info: PublicInfo, myself: Player) -> Character:
         pass
 
     @abstractmethod
@@ -36,8 +36,5 @@ class EngineInterface(ABC):
         pass
 
     @abstractmethod
-    def warlord(self, public_info: PublicInfo, myself:Player) -> WarlordOption:
+    def warlord(self, public_info: PublicInfo, myself: Player) -> Option[WarlordTarget]:
         pass
-
-
-

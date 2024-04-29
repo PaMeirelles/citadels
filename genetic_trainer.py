@@ -1,10 +1,8 @@
-from basic_genetic import BasicGenetic, get_best_basic_genetic
 from fast_builder import FastBuilder
 from game import Game
 from random import seed
 import numpy as np
 from deap import base, creator, tools, algorithms
-from genetic import Genetic
 from utility import get_engine_by_name
 
 seed(2)

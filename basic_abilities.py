@@ -1,8 +1,11 @@
 from typing import List
+
+from option import Option, Some, NONE
+
 from engine import EngineInterface
 from models import Character, District, Resource, Action, WarlordTarget, MagicianPower, SwapHands, \
-    ChangeCards, NoTarget, WarlordOption, Ability, Build, PublicInfo
-from random import randint, choice, random, sample, shuffle
+    Ability, Build, PublicInfo
+from random import randint, choice, sample, shuffle
 from player import Player
 
 
@@ -61,7 +64,7 @@ class BasicAbilities(EngineInterface):
 
         return SwapHands(biggest_hand)
 
-    def warlord(self, public_info: PublicInfo, myself: Player) -> WarlordOption:
+    def warlord(self, public_info: PublicInfo, myself: Player) -> Option[WarlordTarget]:
         lst = list(enumerate(public_info.player_public_info))
         shuffle(lst)
         for i, p in lst:
@@ -69,8 +72,8 @@ class BasicAbilities(EngineInterface):
                 continue
             for j, d in enumerate(public_info.player_public_info[i].districts):
                 if d.cost == 1:
-                    return WarlordTarget(i, j)
-        return NoTarget()
+                    return Some(WarlordTarget(i, j))
+        return NONE
 
     def choose_action(self, options: List[Action], public_info: PublicInfo, myself: Player) -> Action:
         most_expensive = None

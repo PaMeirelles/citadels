@@ -8,7 +8,6 @@ from game import Game
 from random import seed
 from tqdm import tqdm
 
-from genetic import get_best_genetic, get_my_genetic
 from utility import get_engine_by_name
 
 seed(1)

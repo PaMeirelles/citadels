@@ -127,16 +127,6 @@ class ChangeCards(MagicianPower):
 
 
 @dataclass
-class WarlordOption:
-    pass
-
-
-@dataclass
-class WarlordTarget(WarlordOption):
+class WarlordTarget:
     player_id: int
     district_id: int
-
-
-@dataclass
-class NoTarget(WarlordOption):
-    pass

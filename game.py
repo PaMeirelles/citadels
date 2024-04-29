@@ -1,14 +1,19 @@
 from random import shuffle, randint
+from typing import List
+
 from option import Some
+
+from engine import EngineInterface
 from models import Character, Action, EndTurn, Build, Ability, AssassinMarker, ThiefMarker, SwapHands, \
-    ChangeCards, DistrictType, Resource, NoTarget, Forge, ThievesLair, PublicInfo
+    ChangeCards, DistrictType, Resource, Forge, ThievesLair, PublicInfo
 from player import Player
-from utility import retrieve_cards, has_all_types, get_engine_by_name, get_order
+from utility import retrieve_cards, has_all_types, get_order
 from stats import Stats
+from option import NONE
 
 
 class Game:
-    def __init__(self, num_players, engines):
+    def __init__(self, num_players: int, engines: List[EngineInterface]):
         self.players = [Player(i) for (i, _) in enumerate(range(num_players))]
         self.deck = retrieve_cards()
         self.markers = {}
@@ -131,8 +136,9 @@ class Game:
                 if "Magical school" in [x.name for x in player.districts]:
                     player.gold += 1
                 w = engine.warlord(self.get_public_info(), player)
-                if isinstance(w, NoTarget):
+                if w == NONE:
                     return
+                w = w.value
                 player_target = self.players[w.player_id]
                 if player_target.character != Character.Bishop and player_target not in self.finishing_order:
                     d = player_target.districts[w.district_id]

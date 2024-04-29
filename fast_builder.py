@@ -1,16 +1,9 @@
 from random import choice
 from typing import List
 
-from basic_genetic import BasicGenetic
-from models import Action, Ability, Build, PublicInfo, Resource, DistrictType
+from basic_genetic import BasicGenetic, BEST_GENES
+from models import Action, Ability, Build, PublicInfo, DistrictType
 from player import Player
-
-
-def get_best_fast_builder():
-    genes = [0.8097353164231837, 0.9491063568344036, 0.379127453165517, 1.0930914698122582, 0.21752728270739707,
-             0.572800879043732, 1.3251915624193629, -0.25935536225209604]
-
-    return FastBuilder(genes)
 
 
 class FastBuilder(BasicGenetic):
@@ -18,9 +11,7 @@ class FastBuilder(BasicGenetic):
         if genes is not None:
             best_genes = genes
         else:
-            best_genes = [0.9783701214983467, 0.9665306151785001, 0.6122460569228687, 1.0678189251978236,
-                          0.3282948123261767,
-                          0.599630362630095, 1.1112367557854417, 0.25914538633473455]
+            best_genes = BEST_GENES
         super().__init__(best_genes[0], best_genes[1], best_genes[2], best_genes[3], best_genes[4], best_genes[5],
                          best_genes[6], best_genes[7])
 

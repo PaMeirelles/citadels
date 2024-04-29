@@ -1,7 +1,8 @@
 from typing import List
+from option import Option, NONE, Some
 from engine import EngineInterface
-from models import Character, PlayerPublicInfo, District, Resource, Action, WarlordTarget, MagicianPower, SwapHands, \
-    ChangeCards, NoTarget, WarlordOption, PublicInfo
+from models import Character, District, Resource, Action, WarlordTarget, MagicianPower, SwapHands, \
+    ChangeCards, PublicInfo
 from random import randint, choice, random, sample
 from player import Player
 
@@ -20,12 +21,12 @@ class RandomChooser(EngineInterface):
             card_ids = [x for x in range(len(myself.cards)) if random() > .5]
             return ChangeCards(card_ids)
 
-    def warlord(self, public_info: PublicInfo, myself: Player) -> WarlordOption:
+    def warlord(self, public_info: PublicInfo, myself: Player) -> Option[WarlordTarget]:
         player_id = randint(0, len(public_info.player_public_info)-1)
         if len(public_info.player_public_info[player_id].districts) == 0:
-            return NoTarget()
+            return NONE
         district_id = randint(0, len(public_info.player_public_info[player_id].districts)-1)
-        return WarlordTarget(player_id, district_id)
+        return Some(WarlordTarget(player_id, district_id))
 
     def choose_action(self, options: List[Action], public_info: PublicInfo, myself: Player) -> Action:
         return choice(options)
